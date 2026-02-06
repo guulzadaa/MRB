@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Mini Recipe Book — Recipes</title>
+  <link rel="stylesheet" href="css/style.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.umd.min.js"></script>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="nav-shell">
+      <div class="brandbox">
+        <div class="logo">MR</div>
+        <div class="brandtext">
+          <div class="title">Mini Recipe Book</div>
+          <div class="subtitle">Chef recipes • Sepolia testnet</div>
+        </div>
+      </div>
+
+      <div class="navlinks">
+        <a id="navLogin" href="index.html">Login</a>
+        <a id="navAbout" href="about.html">About Us</a>
+        <a id="navRecipes" href="recipes.html">Recipes</a>
+        <a id="navProfile" href="profile.html">Profile</a>
+        <a id="navCreate" href="create-recipe.html">Create</a>
+      </div>
+
+      <div class="userpill">
+        <div class="pill">
+          <span class="dot"></span>
+          <span class="label" id="navRole">User</span>
+          <span class="value" id="navUser">—</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="card">
+      <h1 class="h1">Recipes (Campaigns)</h1>
+      <p class="p">
+        Contribute test ETH to recipe campaigns and receive ERC-20 reward tokens automatically.
+      </p>
+
+      <div class="row">
+        <span class="badge" id="netBadge">Network: —</span>
+        <span class="badge" id="addrBadge">Address: —</span>
+      </div>
+
+      <div class="hr"></div>
+      <div class="small" id="recipesStatus">Checking wallet…</div>
+    </div>
+
+    <div style="height:14px;"></div>
+    <div id="recipesList"></div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/wallet.js"></script>
+  <script src="js/nav.js"></script>
+  <script src="js/recipes.js"></script>
+
+  <script>
+    async function refreshBadges() {
+      try {
+        const cid = await WALLET.getChainId();
+        document.getElementById("netBadge").textContent = "ChainId: " + cid;
+      } catch { document.getElementById("netBadge").textContent = "Network: —"; }
+      try {
+        const a = await WALLET.getConnectedAccount();
+        document.getElementById("addrBadge").textContent = "Address: " + (a ? UI.shortAddr(a) : "—");
+      } catch { document.getElementById("addrBadge").textContent = "Address: —"; }
+    }
+    (async () => {
+      await NAV.updateNavbar("recipes");
+      await refreshBadges();
+      try {
+        const a = await WALLET.getConnectedAccount();
+        if (!a) throw new Error("Not connected. Open Login and connect MetaMask.");
+        await WALLET.ensureSepolia();
+        UI.setText("recipesStatus", "Connected! Loading campaigns…");
+        await RECIPES.loadCampaigns();
+        UI.setText("recipesStatus", "Loaded!");
+      } catch (e) {
+        UI.setText("recipesStatus", "Error: " + e.message);
+      }
+    })();
+    if (window.ethereum) {
+      window.ethereum.on("chainChanged", () => location.reload());
+      window.ethereum.on("accountsChanged", () => location.reload());
+    }
+  </script>
+</body>
+</html>
