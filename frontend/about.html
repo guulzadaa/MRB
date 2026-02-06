@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Mini Recipe Book — About</title>
+  <link rel="stylesheet" href="css/style.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.umd.min.js"></script>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="nav-shell">
+      <div class="brandbox">
+        <div class="logo">MR</div>
+        <div class="brandtext">
+          <div class="title">Mini Recipe Book</div>
+          <div class="subtitle">Chef recipes • Sepolia testnet</div>
+        </div>
+      </div>
+
+      <div class="navlinks">
+        <a id="navLogin" href="index.html">Login</a>
+        <a id="navAbout" href="about.html">About Us</a>
+        <a id="navRecipes" href="recipes.html">Recipes</a>
+        <a id="navProfile" href="profile.html">Profile</a>
+        <a id="navCreate" href="create-recipe.html">Create</a>
+      </div>
+
+      <div class="userpill">
+        <div class="pill">
+          <span class="dot"></span>
+          <span class="label" id="navRole">User</span>
+          <span class="value" id="navUser">—</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="card">
+      <h1 class="h1">About us</h1>
+      <p class="p">
+        Mini Recipe Book is an educational DApp where each recipe is represented as a crowdfunding-style campaign
+        on the Sepolia test network.
+      </p>
+
+      <div class="hr"></div>
+
+      <h2 class="h1" style="font-size:22px;">How it works</h2>
+      <ul class="p">
+        <li>Users connect with MetaMask.</li>
+        <li>Users contribute test ETH to a recipe campaign until a deadline.</li>
+        <li>Contributions are tracked on-chain per user.</li>
+        <li>After the deadline, owner finalizes the campaign.</li>
+        <li>If successful → owner withdraws. If failed → users refund.</li>
+        <li>ERC-20 reward tokens are minted automatically for contributors.</li>
+      </ul>
+
+      <div class="hr"></div>
+
+      <h2 class="h1" style="font-size:22px;">Tech stack</h2>
+      <div class="row">
+        <span class="badge">Solidity</span>
+        <span class="badge">Hardhat</span>
+        <span class="badge">MetaMask</span>
+        <span class="badge">Ethers.js</span>
+        <span class="badge">Sepolia</span>
+        <span class="badge">ERC-20</span>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/wallet.js"></script>
+  <script src="js/nav.js"></script>
+  <script>
+    (async () => { await NAV.updateNavbar("about"); })();
+    if (window.ethereum) {
+      window.ethereum.on("chainChanged", () => location.reload());
+      window.ethereum.on("accountsChanged", () => location.reload());
+    }
+  </script>
+</body>
+</html>
