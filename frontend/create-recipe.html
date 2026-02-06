@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Mini Recipe Book — Create</title>
+  <link rel="stylesheet" href="css/style.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.umd.min.js"></script>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="nav-shell">
+      <div class="brandbox">
+        <div class="logo">MR</div>
+        <div class="brandtext">
+          <div class="title">Mini Recipe Book</div>
+          <div class="subtitle">Chef recipes • Sepolia testnet</div>
+        </div>
+      </div>
+
+      <div class="navlinks">
+        <a id="navLogin" href="index.html">Login</a>
+        <a id="navAbout" href="about.html">About Us</a>
+        <a id="navRecipes" href="recipes.html">Recipes</a>
+        <a id="navProfile" href="profile.html">Profile</a>
+        <a id="navCreate" href="create-recipe.html">Create</a>
+      </div>
+
+      <div class="userpill">
+        <div class="pill">
+          <span class="dot"></span>
+          <span class="label" id="navRole">User</span>
+          <span class="value" id="navUser">—</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div id="createGate"></div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/wallet.js"></script>
+  <script src="js/nav.js"></script>
+  <script src="js/create.js"></script>
+
+  <script>
+    (async () => {
+      await NAV.updateNavbar("create");
+
+      try {
+        const a = await WALLET.getConnectedAccount();
+        if (!a) throw new Error("Not connected. Open Login and connect MetaMask.");
+        await WALLET.ensureSepolia();
+        await CREATE.initCreatePage();
+      } catch (e) {
+        UI.setHTML("createGate", `<div class="card"><h2 class="h1">Error</h2><p class="p">${e.message}</p></div>`);
+      }
+    })();
+
+    if (window.ethereum) {
+      window.ethereum.on("chainChanged", () => location.reload());
+      window.ethereum.on("accountsChanged", () => location.reload());
+    }
+  </script>
+</body>
+</html>
