@@ -4,11 +4,12 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Mini Recipe Book — Recipes</title>
+
   <link rel="stylesheet" href="css/style.css"/>
   <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.umd.min.js"></script>
 </head>
-<body>
 
+<body>
   <div class="topbar">
     <div class="nav-shell">
       <div class="brandbox">
@@ -40,12 +41,10 @@
   <div class="container">
     <div class="card">
       <h1 class="h1">Recipes (Campaigns)</h1>
-      <p class="p">
-        Contribute test ETH to recipe campaigns and receive ERC-20 reward tokens automatically.
-      </p>
+      <p class="p">Contribute test ETH to recipe campaigns and receive ERC-20 reward tokens automatically.</p>
 
-      <div class="row">
-        <span class="badge" id="netBadge">Network: —</span>
+      <div class="row" style="gap:10px; flex-wrap:wrap;">
+        <span class="badge" id="netBadge">ChainId: —</span>
         <span class="badge" id="addrBadge">Address: —</span>
       </div>
 
@@ -68,26 +67,41 @@
       try {
         const cid = await WALLET.getChainId();
         document.getElementById("netBadge").textContent = "ChainId: " + cid;
-      } catch { document.getElementById("netBadge").textContent = "Network: —"; }
+      } catch {
+        document.getElementById("netBadge").textContent = "ChainId: —";
+      }
+
       try {
         const a = await WALLET.getConnectedAccount();
-        document.getElementById("addrBadge").textContent = "Address: " + (a ? UI.shortAddr(a) : "—");
-      } catch { document.getElementById("addrBadge").textContent = "Address: —"; }
+        document.getElementById("addrBadge").textContent =
+          "Address: " + (a ? UI.shortAddr(a) : "—");
+      } catch {
+        document.getElementById("addrBadge").textContent = "Address: —";
+      }
     }
+
     (async () => {
-      await NAV.updateNavbar("recipes");
-      await refreshBadges();
       try {
+        await NAV.updateNavbar("recipes");
+        await refreshBadges();
         const a = await WALLET.getConnectedAccount();
-        if (!a) throw new Error("Not connected. Open Login and connect MetaMask.");
+        if (!a) {
+          UI.setText("recipesStatus", "Not connected. Open Login and connect MetaMask.");
+          UI.setHTML("recipesList", "");
+          return;
+        }
         await WALLET.ensureSepolia();
         UI.setText("recipesStatus", "Connected! Loading campaigns…");
-        await RECIPES.loadCampaigns();
-        UI.setText("recipesStatus", "Loaded!");
+        if (!window.RECIPES || typeof window.RECIPES.loadCampaigns !== "function") {
+          throw new Error("recipes.js not loaded. Check: frontend/js/recipes.js and script path /js/recipes.js");
+        }
+        await window.RECIPES.loadCampaigns();
+        UI.setText("recipesStatus", "Loaded");
       } catch (e) {
-        UI.setText("recipesStatus", "Error: " + e.message);
+        UI.setText("recipesStatus", "Error: " + (e.message || e));
       }
     })();
+
     if (window.ethereum) {
       window.ethereum.on("chainChanged", () => location.reload());
       window.ethereum.on("accountsChanged", () => location.reload());
