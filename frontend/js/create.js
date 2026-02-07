@@ -12,7 +12,7 @@ async function initCreatePage() {
     UI.setHTML("createGate", `
       <div class="card">
         <h2 class="h1">Access denied</h2>
-        <p class="p">This page is only for the owner/admin.</p>
+        <p class="p">This page is only for the owner.</p>
         <a class="btn secondary" href="recipes.html">Go to Recipes</a>
       </div>
     `);
@@ -22,14 +22,14 @@ async function initCreatePage() {
   UI.setHTML("createGate", `
     <div class="card">
       <h2 class="h1">Create recipe campaign (Owner only)</h2>
-      <p class="p">Create a crowdfunding-style recipe campaign: goal + deadline.</p>
-
+      <p class="p">Create a recipe campaign: title + image + goal + duration.</p>
+      
       <label class="label">Title</label>
       <input class="input" id="title" placeholder="e.g., Pasta Carbonara" />
-
+      <label class="label">Image URL</label>
+      <input class="input" id="imageURI" placeholder="/images/pasta.jpg or https://..." />
       <label class="label">Funding goal (ETH)</label>
       <input class="input" id="goalEth" placeholder="0.05" />
-
       <label class="label">Duration (minutes)</label>
       <input class="input" id="durationMin" placeholder="60" />
 
@@ -44,23 +44,23 @@ async function initCreatePage() {
 async function createCampaign() {
   await WALLET.ensureSepolia();
   const signer = await WALLET.getSigner();
-
   const title = document.getElementById("title").value.trim();
+  const imageURI = document.getElementById("imageURI").value.trim();
   const goalEth = document.getElementById("goalEth").value.trim();
   const durationMin = document.getElementById("durationMin").value.trim();
 
   if (title.length < 3) return UI.setText("createStatus", "Title must be at least 3 chars.");
+  if (!imageURI) return UI.setText("createStatus", "Enter image URL (e.g. /images/pasta.jpg).");
   if (!goalEth) return UI.setText("createStatus", "Enter goal in ETH.");
   if (!durationMin) return UI.setText("createStatus", "Enter duration in minutes.");
 
   const goalWei = ethers.parseEther(goalEth);
   const durationSeconds = BigInt(durationMin) * 60n;
-
   const platform = new ethers.Contract(APP_CONFIG.PLATFORM_ADDRESS, ABIS.PLATFORM, signer);
 
   UI.setText("createStatus", "Sending transaction...");
   try {
-    const tx = await platform.createRecipeCampaign(title, goalWei, durationSeconds);
+    const tx = await platform.createRecipeCampaign(title, imageURI, goalWei, durationSeconds);
     UI.setText("createStatus", `Pending: ${tx.hash}`);
     await tx.wait();
     UI.setText("createStatus", `Created! Tx: ${tx.hash}`);
