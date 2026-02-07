@@ -68,22 +68,78 @@ function escapeHtml(str) {
   }[m]));
 }
 
+function buildImageSrc(imageURI) {
+  if (!imageURI) return "";
+  const s = String(imageURI).trim();
+  if (!s) return "";
+  if (s.startsWith("http://") || s.startsWith("https://")) return s;
+  if (s.startsWith("/")) return s;
+  return "/" + s;
+}
+
+function toNum(x, fallback = 0) {
+  try {
+    if (x === null || x === undefined) return fallback;
+    return Number(x);
+  } catch {
+    return fallback;
+  }
+}
+
+function toBig(x, fallback = 0n) {
+  try {
+    if (x === null || x === undefined) return fallback;
+    return BigInt(x);
+  } catch {
+    return fallback;
+  }
+}
+
+function normalizeCampaign(c) {
+  const id        = (c.id        ?? c[0]);
+  const title     = (c.title     ?? c[1]);
+  const imageURI  = (c.imageURI  ?? c[2]);
+  const goalWei   = (c.goalWei   ?? c[3] ?? 0n);
+  const deadline  = (c.deadline  ?? c[4] ?? 0n);
+  const raisedWei = (c.totalRaised ?? c[5] ?? 0n);
+  const finalized = (c.finalized ?? c[6] ?? false);
+  const successful= (c.successful?? c[7] ?? false);
+  const withdrawn = (c.withdrawn ?? c[8] ?? false);
+  const exists    = (c.exists    ?? c[9] ?? true);
+
+  return {
+    id: toNum(id, 0),
+    title: title || "",
+    imageURI: imageURI || "",
+    goalWei: toBig(goalWei, 0n),
+    deadline: toBig(deadline, 0n),
+    totalRaised: toBig(raisedWei, 0n),
+    finalized: Boolean(finalized),
+    successful: Boolean(successful),
+    withdrawn: Boolean(withdrawn),
+    exists: Boolean(exists),
+  };
+}
+
 async function loadCampaigns() {
   const { platform } = await getContracts();
   const total = await platform.nextCampaignId();
   const addr = await signerAddress();
   const isOwner = addr.toLowerCase() === APP_CONFIG.OWNER_ADDRESS.toLowerCase();
   const chainNow = await getChainNowSec();
+
   const items = [];
   for (let i = 0; i < Number(total); i++) {
-    const c = await platform.getCampaign(i);
+    const raw = await platform.getCampaign(i);
+    const c = normalizeCampaign(raw);
     const my = await platform.contributions(i, addr);
     const ended = (Number(c.deadline) <= chainNow);
-    const progress = (Number(c.totalRaised) / Number(c.goalWei || 1n)) * 100;
+    const progress = (c.goalWei === 0n) ? 0 : (Number(c.totalRaised) / Number(c.goalWei)) * 100;
 
     items.push({
-      id: Number(c.id),
+      id: c.id,
       title: c.title,
+      imageURI: c.imageURI,
       goalEth: ethers.formatEther(c.goalWei),
       raisedEth: ethers.formatEther(c.totalRaised),
       deadline: c.deadline,
@@ -114,6 +170,7 @@ function render(items) {
     const canWithdraw = c.isOwner && c.finalized && c.successful && !c.withdrawn;
     const hasContribution = (BigInt(c.myWei) > 0n);
     const canRefund = (!c.isOwner && c.finalized && !c.successful && hasContribution);
+
     const statusText =
       c.finalized ? (c.successful ? "Successful!" : "Failed.")
       : (c.ended ? "Ended (not finalized)" : "Active");
@@ -122,12 +179,20 @@ function render(items) {
       ? `<div class="small" style="margin-top:8px;">Refund is available only if you contributed ETH.</div>`
       : "";
 
+    const imgSrc = buildImageSrc(c.imageURI);
+    const imgBlock = imgSrc
+      ? `<img src="${imgSrc}" alt="recipe image"
+              style="width:100%; height:160px; object-fit:cover; border-radius:12px; margin:10px 0; border:1px solid rgba(139,94,52,0.18);" />`
+      : "";
+
     return `
       <div class="card">
         <div class="row" style="justify-content:space-between; align-items:flex-start;">
           <div style="min-width:260px;">
             <div class="badge">Recipe Campaign #${c.id}</div>
             <h3 style="margin:10px 0 6px;">${escapeHtml(c.title)}</h3>
+
+            ${imgBlock}
 
             <div class="small">Goal: <b>${c.goalEth} ETH</b></div>
             <div class="small">Raised: <b>${c.raisedEth} ETH</b> (${c.progress.toFixed(1)}%)</div>
