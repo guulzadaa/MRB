@@ -8,7 +8,6 @@
   <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.umd.min.js"></script>
 </head>
 <body>
-
   <div class="topbar">
     <div class="nav-shell">
       <div class="brandbox">
@@ -42,28 +41,23 @@
       <h1 class="h1">Profile</h1>
       <p class="p">Wallet and balances.</p>
 
-      <div class="row">
+      <div class="row" style="gap:10px; flex-wrap:wrap;">
         <span class="badge" id="profileShort">—</span>
-        <span class="small" id="profileStatus"></span>
+        <span class="small" id="profileStatus">Checking wallet…</span>
       </div>
-
       <div class="hr"></div>
-
       <div class="small">Address:</div>
       <div class="mono" id="profileAddress">—</div>
-
       <div style="height:10px;"></div>
-
-      <div class="row">
+      <div class="row" style="gap:10px; flex-wrap:wrap;">
         <div class="badge" id="ethBalance">ETH: —</div>
-        <div class="badge" id="tokenBalance">Token: —</div>
+        <div class="badge" id="tokenBalance">RRT: —</div>
       </div>
     </div>
 
     <div style="height:14px;"></div>
-
-    <h2 class="h1" style="font-size:22px;">Your campaigns</h2>
-    <div id="purchasedList"></div>
+    <h2 class="h1" style="font-size:22px;">Your contributions</h2>
+    <div id="myCampaigns"></div>
   </div>
 
   <script src="js/config.js"></script>
@@ -74,17 +68,19 @@
 
   <script>
     (async () => {
-      await NAV.updateNavbar("profile");
-
       try {
+        await NAV.updateNavbar("profile");
+
         const a = await WALLET.getConnectedAccount();
-        if (!a) throw new Error("Not connected. Open Login and connect MetaMask.");
+        if (!a) {
+          UI.setText("profileStatus", "Not connected. Open Login and connect MetaMask.");
+          return;
+        }
 
         await WALLET.ensureSepolia();
-        UI.setText("profileStatus", "Connected!");
         await PROFILE.loadProfile();
       } catch (e) {
-        UI.setText("profileStatus", "Error: " + e.message);
+        UI.setText("profileStatus", "Error: " + (e.message || e));
       }
     })();
 
